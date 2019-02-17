@@ -3,6 +3,9 @@
 %% API exports
 -export([handle/2]).
 
+-ignore_xref([{handle, 2}]).
+
+%% Type definitions
 -type rpc_error_reason() :: parse_error |
                             invalid_request |
                             method_not_found |
