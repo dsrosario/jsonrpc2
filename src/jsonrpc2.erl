@@ -12,7 +12,7 @@
                             invalid_params |
                             internal_error |
                             server_error |
-                            {jsonrpc, integer(), binary()}.
+                            {integer(), binary()}.
 
 -type rpc_handler_fun() :: fun((binary(), jsx:json_term()) -> {ok, jsx:json_term()} | 
                                                               {error, rpc_error_reason()} |
@@ -112,7 +112,7 @@ get_error_code_and_message(method_not_found) -> {-32601, <<"Method not found">>}
 get_error_code_and_message(invalid_params) -> {-32602, <<"Invalid params">>};
 get_error_code_and_message(internal_error) -> {-32603, <<"Internal error">>};
 get_error_code_and_message(server_error) -> {-32000, <<"Server error">>};
-get_error_code_and_message({jsonrpc, Code, Message}) -> {Code, Message};
+get_error_code_and_message({Code, Message}) when is_integer(Code) andalso is_binary(Message) -> {Code, Message};
 get_error_code_and_message(_) -> {-32001, <<"Unknown Server error">>}.
 
 -spec make_error_response(Reason :: rpc_error_reason(),
