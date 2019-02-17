@@ -17,6 +17,7 @@
 -type rpc_handler_fun() :: fun((binary(), jsx:json_term()) -> {ok, jsx:json_term()} | 
                                                               {error, rpc_error_reason()} |
                                                               {error, {rpc_error_reason(), jsx:json_term()}}).
+-type rpc_id() :: null | binary() | number().
 
 %%====================================================================
 %% API functions
@@ -85,7 +86,7 @@ execute_rpc(Method, Params, Id, Handler)
     when Id =:= undefined orelse
          Id =:= null orelse
          is_binary(Id) orelse
-         is_integer(Id) ->
+         is_number(Id) ->
     try 
         case Handler(Method, Params) of
             {ok, Result} -> 
@@ -117,7 +118,7 @@ get_error_code_and_message(_) -> {-32001, <<"Unknown Server error">>}.
 
 -spec make_error_response(Reason :: rpc_error_reason(),
                           Data :: undefined | jsx:json_term(),
-                          Id :: undefined | null | binary() | integer()) -> noreply | {reply, jsx:json_term()}.
+                          Id :: rpc_id() | undefined) -> noreply | {reply, jsx:json_term()}.
 make_error_response(Reason, Data, Id) ->
     {Code, Message} = get_error_code_and_message(Reason),
     make_error_response(Code, Message, Data, Id).
@@ -125,7 +126,7 @@ make_error_response(Reason, Data, Id) ->
 -spec make_error_response(Code :: integer(),
                           Message :: binary(),
                           Data :: undefined | jsx:json_term(),
-                          Id :: undefined | null | binary() | integer()) -> noreply | {reply, jsx:json_term()}.
+                          Id :: rpc_id() | undefined) -> noreply | {reply, jsx:json_term()}.
 make_error_response(_, _, _, undefined) ->
     noreply;
 make_error_response(Code, Message, Data, Id) ->
@@ -139,7 +140,7 @@ make_error_response(Code, Message, Data, Id) ->
               id => Id}}.
 
 -spec make_result_response(Result :: jsx:json_term(),
-                           Id :: undefined | null | binary() | integer()) -> noreply | {reply, jsx:json_term()}.
+                           Id :: rpc_id() | undefined) -> noreply | {reply, jsx:json_term()}.
 make_result_response(_, undefined) -> 
     noreply;
 make_result_response(Result, Id) ->
