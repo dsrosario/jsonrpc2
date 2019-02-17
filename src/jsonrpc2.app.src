@@ -1,0 +1,17 @@
+{application, jsonrpc2,
+ [{description, "A JSON RPC 2 handler"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {applications,
+   [kernel,
+    stdlib,
+    jsx,
+    lager
+   ]},
+  {env,[]},
+  {modules, []},
+
+  {maintainers, []},
+  {licenses, ["MIT"]},
+  {links, []}
+ ]}.
