@@ -19,6 +19,8 @@
                                                               {error, {rpc_error_reason(), jsx:json_term()}}).
 -type rpc_id() :: null | binary() | number().
 
+-export_type([rpc_error_reason/0]).
+
 %%====================================================================
 %% API functions
 %%====================================================================
