@@ -26,7 +26,7 @@
 %%====================================================================
 -spec handle(Data :: jsx:json_text(),
              Handler :: rpc_handler_fun()) -> {reply, jsx:json_text()} | noreply.
-handle(Data, Handler) when is_binary(Data) andalso is_function(Handler, 2) ->
+handle(Data, Handler) when is_binary(Data) andalso is_function(Handler, 2) orelse is_function(Handler, 3) ->
     Response = 
         try 
             begin
@@ -90,7 +90,7 @@ execute_rpc(Method, Params, Id, Handler)
          is_binary(Id) orelse
          is_number(Id) ->
     try 
-        case Handler(Method, Params) of
+        case dispatch(Method, Params, Id, Handler) of
             {ok, Result} -> 
                 make_result_response(Result, Id);
             {error, {Reason, ErrorData}} ->
@@ -107,6 +107,15 @@ execute_rpc(Method, Params, Id, Handler)
     end;
 execute_rpc(_, _, _, _) ->
     make_error_response(invalid_request, undefined, undefined).
+
+-spec dispatch(Method :: binary(),
+               Params :: jsx:json_term(),
+               Id :: jsx:json_term() | undefined,
+               Handler :: rpc_handler_fun()) -> {ok, jsx:json_term()} | {error, {rpc_error_reason(), undefined | jsx:json_term()}} | {error, rpc_error_reason()}.
+dispatch(Method, Params, _Id, Handler) when is_function(Handler, 2) ->
+    Handler(Method, Params);
+dispatch(Method, Params, Id, Handler) when is_function(Handler, 3) ->
+    Handler(Method, Params, #{<<"method">> => Method, <<"id">> => Id}).
 
 -spec get_error_code_and_message(Reason :: rpc_error_reason()) -> {integer(), binary()}.
 get_error_code_and_message(parse_error) -> {-32700, <<"Parse error">>};
