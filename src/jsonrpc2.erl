@@ -16,7 +16,10 @@
 
 -type rpc_handler_fun() :: fun((binary(), jsx:json_term()) -> {ok, jsx:json_term()} | 
                                                               {error, rpc_error_reason()} |
-                                                              {error, {rpc_error_reason(), jsx:json_term()}}).
+                                                              {error, {rpc_error_reason(), jsx:json_term()}}) |
+                           fun((binary(), jsx:json_term(), jsx:json_term()) -> {ok, jsx:json_term()} | 
+                                                                               {error, rpc_error_reason()} |
+                                                                               {error, {rpc_error_reason(), jsx:json_term()}}).
 -type rpc_id() :: null | binary() | number().
 
 -export_type([rpc_error_reason/0]).
@@ -26,7 +29,7 @@
 %%====================================================================
 -spec handle(Data :: jsx:json_text(),
              Handler :: rpc_handler_fun()) -> {reply, jsx:json_text()} | noreply.
-handle(Data, Handler) when is_binary(Data) andalso is_function(Handler, 2) orelse is_function(Handler, 3) ->
+handle(Data, Handler) when is_binary(Data) andalso (is_function(Handler, 2) orelse is_function(Handler, 3)) ->
     Response = 
         try 
             begin

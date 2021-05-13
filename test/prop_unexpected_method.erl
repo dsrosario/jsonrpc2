@@ -11,6 +11,13 @@ prop_test() ->
             ReplyJson = jsx:decode(Reply, [return_maps, {labels, atom}]),
             is_expected_reply(ReplyJson) andalso
             is_expected_id(RequestJson, ReplyJson)
+        end),
+    ?FORALL(RequestJson, request_json(),
+        begin
+            {reply, Reply} = jsonrpc2:handle(jsx:encode(RequestJson), fun rpc_handler/3),
+            ReplyJson = jsx:decode(Reply, [return_maps, {labels, atom}]),
+            is_expected_reply(ReplyJson) andalso
+            is_expected_id(RequestJson, ReplyJson)
         end).
 
 %%%%%%%%%%%%%%%
@@ -27,6 +34,9 @@ request_json() ->
             params => []}).
 
 rpc_handler(<<>>, _) ->
+    throw(unexpected_function_call).
+
+rpc_handler(<<>>, _, _) ->
     throw(unexpected_function_call).
 
 is_expected_reply(#{jsonrpc := <<"2.0">>,
