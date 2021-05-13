@@ -1,10 +1,38 @@
-REBAR3 = rebar3
+SHELL := bash
+.ONESHELL:
+.SHELLFLAGS := -euc
+.DELETE_ON_ERROR:
+MAKEFLAGS += --warn-undefined-variables
+MAKEFLAGS += --no-builtin-rules
 
-.PHONY: compile test
+clean:
+	@rebar3 clean
+.PHONY: clean
 
 compile:
-	@$(REBAR3) compile
+	@rebar3 compile
+.PHONY: compile
 
-test:
-	@$(REBAR3) ct
-	@$(REBAR3) proper
+check: xref dialyzer
+.PHONY: check
+
+xref:
+	@rebar3 xref
+.PHONY: xref
+
+dialyzer:
+	@rebar3 dialyzer
+.PHONY: dialyzer
+
+test: ct proper
+.NOTPARALLEL: test
+.PHONY: test
+
+ct:
+	@rebar3 ct
+.PHONY: ct
+
+proper:
+	@rebar3 proper
+.PHONY: proper
+
