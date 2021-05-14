@@ -14,9 +14,9 @@
                             server_error |
                             {integer(), binary()}.
 
--type rpc_handler_fun() :: fun((binary(), jsx:json_term()) -> {ok, jsx:json_term()} | 
-                                                              {error, rpc_error_reason()} |
-                                                              {error, {rpc_error_reason(), jsx:json_term()}}).
+-type rpc_handler_fun() :: fun((binary(), jsx:json_term(), jsx:json_term() | undefined) -> {ok, jsx:json_term()} | 
+                                                                                           {error, rpc_error_reason()} |
+                                                                                           {error, {rpc_error_reason(), jsx:json_term()}}).
 -type rpc_id() :: null | binary() | number().
 
 -export_type([rpc_error_reason/0]).
@@ -26,7 +26,7 @@
 %%====================================================================
 -spec handle(Data :: jsx:json_text(),
              Handler :: rpc_handler_fun()) -> {reply, jsx:json_text()} | noreply.
-handle(Data, Handler) when is_binary(Data) andalso is_function(Handler, 2) ->
+handle(Data, Handler) when is_binary(Data) andalso is_function(Handler, 3) ->
     Response = 
         try 
             begin
@@ -84,13 +84,13 @@ process_rpc_data(Request, _) ->
                   Params :: jsx:json_term(),
                   Id :: jsx:json_term() | undefined,
                   Handler :: rpc_handler_fun()) -> {reply, jsx:json_term()} | noreply.
-execute_rpc(Method, Params, Id, Handler) 
+execute_rpc(Method, Params, Id, Handler)
     when Id =:= undefined orelse
          Id =:= null orelse
          is_binary(Id) orelse
          is_number(Id) ->
     try 
-        case Handler(Method, Params) of
+        case Handler(Method, Params, Id) of
             {ok, Result} -> 
                 make_result_response(Result, Id);
             {error, {Reason, ErrorData}} ->
