@@ -4,11 +4,7 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-handler(<<"sum">>, List) -> {ok, lists:sum(List)};
-handler(<<"event">>, _) -> {ok, #{}};
-handler(<<"invalid_params">>, _) -> {error, invalid_params}.
-
-handler(<<"sum">>, List, Opts) -> {ok, lists:sum([L * maps:get(<<"id">>, Opts) || L <- List])};
+handler(<<"sum">>, List, _) -> {ok, lists:sum(List)};
 handler(<<"event">>, _, _) -> {ok, #{}};
 handler(<<"invalid_params">>, _, _) -> {error, invalid_params}.
 
@@ -35,12 +31,6 @@ validate_error_code(Response, ErrorCode) ->
     ?assertEqual(ErrorCode, maps:get(<<"code">>, Error)).
 
 do_json_rpc(Request) ->
-    case jsonrpc2:handle(jsx:encode(Request), fun handler/2) of
-        {reply, Data} -> jsx:decode(Data, [return_maps]);
-        noreply -> undefined
-    end.
-
-do_json_rpc_with_opts(Request) ->
     case jsonrpc2:handle(jsx:encode(Request), fun handler/3) of
         {reply, Data} -> jsx:decode(Data, [return_maps]);
         noreply -> undefined
