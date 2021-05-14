@@ -1,9 +1,4 @@
-jsonrpc2
+JSON-RPC 2.0 for Erlang
 =====
 
-An OTP library
-
-Build
------
-
-    $ rebar3 compile
+Transport independent library to handle JSON-RPC 2.0 request.

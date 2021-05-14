@@ -25,14 +25,14 @@ all() -> [
     server_error
 ].
 
-simple_request(_Config) -> 
+simple_request(_Config) ->
     Request = jsonrpc2_test_utils:build_request(<<"sum">>, [1,2,3], 1),
     Response = jsonrpc2_test_utils:do_json_rpc(Request), 
     _ = jsonrpc2_test_utils:validate_response(Response, 1),
     ?assertEqual(6, maps:get(<<"result">>, Response)),
     ok.
 
-simple_event(_Config) -> 
+simple_event(_Config) ->
     Request = jsonrpc2_test_utils:build_request(<<"event">>, [], undefined),
     Response = jsonrpc2_test_utils:do_json_rpc(Request), 
     ?assertEqual(undefined, Response),
@@ -72,3 +72,4 @@ server_error(_Config) ->
     _ = jsonrpc2_test_utils:validate_response(Response, 1),
     _ = jsonrpc2_test_utils:validate_error_code(Response, -32000),
     ok.
+
