@@ -5,8 +5,7 @@
   {applications,
    [kernel,
     stdlib,
-    jsx,
-    lager
+    jsx
    ]},
   {env,[]},
   {modules, []},
