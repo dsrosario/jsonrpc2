@@ -1,12 +1,11 @@
 {application, jsonrpc2,
  [{description, "A JSON RPC 2 handler"},
-  {vsn, "0.1.0"},
+  {vsn, "1.0.1"},
   {registered, []},
   {applications,
    [kernel,
     stdlib,
-    jsx,
-    lager
+    jsx
    ]},
   {env,[]},
   {modules, []},

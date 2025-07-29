@@ -1,5 +1,7 @@
 -module(jsonrpc2).
 
+-include_lib("kernel/include/logger.hrl").
+
 %% API exports
 -export([handle/2]).
 
@@ -14,7 +16,7 @@
                             server_error |
                             {integer(), binary()}.
 
--type rpc_handler_fun() :: fun((binary(), jsx:json_term(), jsx:json_term() | undefined) -> {ok, jsx:json_term()} | 
+-type rpc_handler_fun() :: fun((binary(), jsx:json_term(), jsx:json_term() | undefined) -> {ok, jsx:json_term()} |
                                                                                            {error, rpc_error_reason()} |
                                                                                            {error, {rpc_error_reason(), jsx:json_term()}}).
 -type rpc_id() :: null | binary() | number().
@@ -27,23 +29,23 @@
 -spec handle(Data :: jsx:json_text(),
              Handler :: rpc_handler_fun()) -> {reply, jsx:json_text()} | noreply.
 handle(Data, Handler) when is_binary(Data) andalso is_function(Handler, 3) ->
-    Response = 
-        try 
+    Response =
+        try
             begin
                 Request = jsx:decode(Data, [return_maps]),
                 dispatch_rpc(Request, Handler)
             end
         catch
-            C:E -> 
-                _ = lager:debug("parse error: ~p", [{C,E}]),
+            C:E ->
+                ?LOG_DEBUG("parse error: ~p", [{C,E}]),
                 make_error_response(parse_error, undefined, null)
         end,
     case Response of
-        noreply -> 
-            _ = lager:debug("no reply"),
+        noreply ->
+            ?LOG_DEBUG("no reply"),
             noreply;
-        {reply, Reply} -> 
-            _ = lager:debug("reply ~p", [Reply]),
+        {reply, Reply} ->
+            ?LOG_DEBUG("reply ~p", [Reply]),
             {reply, jsx:encode(Reply)}
     end.
 
@@ -57,7 +59,7 @@ dispatch_rpc(Request, Handler) when is_map(Request) ->
     process_rpc_data(Request, Handler);
 dispatch_rpc(Requests, Handler) when is_list(Requests) ->
     Replies = lists:filtermap(
-        fun(Request) -> 
+        fun(Request) ->
             case process_rpc_data(Request, Handler) of
                 {reply, Reply} -> {true, Reply};
                 noreply -> false
@@ -77,7 +79,7 @@ process_rpc_data(#{<<"jsonrpc">> := <<"2.0">>,
     Id = maps:get(<<"id">>, Request, undefined),
     execute_rpc(Method, Params, Id, Handler);
 process_rpc_data(Request, _) ->
-    _ = lager:debug("Invalid request: ~p", [Request]),
+    ?LOG_DEBUG("Invalid request: ~p", [Request]),
     make_error_response(invalid_request, undefined, null).
 
 -spec execute_rpc(Method :: binary(),
@@ -89,9 +91,9 @@ execute_rpc(Method, Params, Id, Handler)
          Id =:= null orelse
          is_binary(Id) orelse
          is_number(Id) ->
-    try 
+    try
         case Handler(Method, Params, Id) of
-            {ok, Result} -> 
+            {ok, Result} ->
                 make_result_response(Result, Id);
             {error, {Reason, ErrorData}} ->
                 make_error_response(Reason, ErrorData, Id);
@@ -102,7 +104,7 @@ execute_rpc(Method, Params, Id, Handler)
         error:function_clause ->
             make_error_response(method_not_found, undefined, Id);
         C:E ->
-            _ = lager:error("Server Error: ~p", [{C,E}]),
+            ?LOG_ERROR("Server Error: ~p", [{C,E}]),
             make_error_response(server_error, undefined, Id)
     end;
 execute_rpc(_, _, _, _) ->
@@ -136,14 +138,14 @@ make_error_response(Code, Message, Data, Id) ->
     ErrorObject = case Data of
                       undefined -> ErrorObject0;
                       _ -> maps:put(data, Data, ErrorObject0)
-                  end,  
+                  end,
     {reply, #{jsonrpc => <<"2.0">>,
               error => ErrorObject,
               id => Id}}.
 
 -spec make_result_response(Result :: jsx:json_term(),
                            Id :: rpc_id() | undefined) -> noreply | {reply, jsx:json_term()}.
-make_result_response(_, undefined) -> 
+make_result_response(_, undefined) ->
     noreply;
 make_result_response(Result, Id) ->
     {reply, #{jsonrpc => <<"2.0">>,
